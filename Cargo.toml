@@ -1,0 +1,15 @@
+[package]
+name = "ev3dev-color-sensor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ev3dev-lang-rust = "0.12.0"
+termcolor = "1.1.3"
+
+csv = "1.1"
+serde = { version = "1", features = ["derive"] }
+rand = "0.8.5"
+
+[profile.release]
+lto = true
