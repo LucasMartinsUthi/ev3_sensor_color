@@ -8,10 +8,12 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use std::error::Error;
 
-use rand::Rng;
 use csv::WriterBuilder;
-use csv::ReaderBuilder;
+use csv::{ ReaderBuilder, StringRecord };
 use serde::Serialize;
+use serde::Deserialize;
+use clap::Parser;
+use std::str::FromStr;
 
 const CSV_FILE_PATH: &str = "foo.csv";
 const H_SIZE: usize = 360;
@@ -22,7 +24,7 @@ type ColorMap = Vec<Vec<ColorTrain>>;
 type RGB = (u8, u8, u8);
 type HSV = (usize, usize, usize);
 
-#[derive(Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 enum ColorTrain {
     Red,
     Blue,
@@ -32,9 +34,37 @@ enum ColorTrain {
     None,
 }
 
-fn main() -> Ev3Result<()>{
-    let mut color_map = vec![vec![ColorTrain::None; H_SIZE]; V_SIZE];
+impl FromStr for ColorTrain {
 
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<ColorTrain, Self::Err> {
+        match input {
+            "Red" => Ok(ColorTrain::Red),
+            "Blue" => Ok(ColorTrain::Blue),
+            "Yellow" => Ok(ColorTrain::Yellow),
+            "White" => Ok(ColorTrain::White),
+            "Black" => Ok(ColorTrain::Black),
+            _ => Err(()),
+        }
+    }
+}
+
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    #[clap(short, long)]
+    color: String
+}
+
+//Train color
+fn main() -> Ev3Result<()>{
+    let args = Args::parse();
+
+    let mut color_map = match csv_read() {
+        Ok(map) => map,
+        Err(_) =>  vec![vec![ColorTrain::None; V_SIZE]; H_SIZE]
+    };
     let color_sensor = ColorSensor::find()?;
     let button = Ev3Button::new()?;
 
@@ -45,10 +75,10 @@ fn main() -> Ev3Result<()>{
         write_color(rgb)?;
 
         let rgb = (rgb.0 as u8, rgb.1 as u8, rgb.2 as u8);
-
         let (h, _, v) = rgb_to_hsv(rgb);
        
-        color_map[h][v] = ColorTrain::Red;
+        color_map[h][v] = ColorTrain::from_str(&args.color).unwrap();
+        // color_map[h][v] = ColorTrain::Red;
 
         button.process();
         if button.is_right() {
@@ -61,18 +91,22 @@ fn main() -> Ev3Result<()>{
     Ok(())
 }
 
-fn csv_read() -> Result<(), Box<dyn Error>> {
-    // let mut rdr = ReaderBuilder::new()
-    //     .delimiter(b'\t')
-    //     .has_headers(false)
-    //     .from_path(CSV_FILE_PATH)?;
+fn csv_read() -> Result<ColorMap, Box<dyn Error>> { 
+    let mut rdr = ReaderBuilder::new()
+        .has_headers(false)
+        .from_path(CSV_FILE_PATH)?;
 
-    // for result in rdr.records() {
-    //     let record = result?;
-    //     println!("{:?}", record);
-    // }
+    let mut color_map = vec![vec![ColorTrain::None; V_SIZE]; H_SIZE];
 
-    Ok(())
+    for (h, result) in rdr.records().enumerate() {
+        let record = result?;
+        
+        let row: Vec<ColorTrain> = record.deserialize(None).unwrap();
+
+        color_map[h] = row;
+    }
+
+    Ok(color_map)
 }
 
 fn csv_write(color_map: ColorMap) -> Result<(), Box<dyn Error>> {
@@ -88,22 +122,6 @@ fn csv_write(color_map: ColorMap) -> Result<(), Box<dyn Error>> {
     wtr.flush()?;
     Ok(())
 }
-
-// fn get_color_map<'a>() -> &'a ColorMap {
-//     // let color_map = vec![vec![Color::None; H_SIZE]; V_SIZE];
-
-//     //csv_read
-
-//     // for i in 0..color_map.len() {
-//     //     for j in 0..color_map[i].len() {
-//     //         color_map[i][j] = Color::Red;
-//     //     }
-//     // }
-
-//     &'a color_map
-// }
-
-
 
 fn rgb_to_hsv(rgb: RGB) -> HSV {
     let r = rgb.0 as f32 / 255.0;
