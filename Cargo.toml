@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ev3dev-lang-rust = "0.12.0"
 termcolor = "1.1.3"
+ev3dev-lang-rust = { git = "https://github.com/LucasMartinsUthi/ev3dev-lang-rust" }
 
 csv = "1.1"
 serde = { version = "1", features = ["derive"] }
