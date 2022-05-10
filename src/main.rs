@@ -6,6 +6,8 @@ use ev3dev_lang_rust::motors::{TachoMotor, MotorPort, LargeMotor};
 // use std::thread;
 // use std::time::Duration;
 use std::{thread, time::Duration};
+// use ev3dev_lang_rust;
+use ev3dev_lang_rust::{ Ev3Button, Ev3Result };
 use std::env;
 use clap::Parser;
 
@@ -22,45 +24,32 @@ struct Args {
     d: f32
 }
     
-fn main() -> ev3dev_lang_rust::Ev3Result<()> {
+fn main() -> Ev3Result<()> {
+    // TODO
+    // Colocar na maior velocidade possível
+    // Girar 90 Graus
+    // tunar o PID
+
+    //usar clap para setar kp ki kd
     env::set_var("RUST_BACKTRACE", "1");
-    let args = Args::parse();
-
-    let arg_p = args.p;
-    let arg_i = args.i;
-    let arg_d = args.d;
-
-    let motor = LargeMotor::get(MotorPort::OutA)?;
-    let motor_default = LargeMotor::get(MotorPort::OutB)?;
-
+    let motor = LargeMotor::find()?;
     motor.reset()?;
-    motor_default.reset()?;
 
-    println!("Position: {}", motor.get_position()?);
-    println!("Position Default: {}", motor_default.get_position()?);
-    // println!("Travel count Final: {}", motor.get_full_travel_count()?);
-    let dir = match args.dir {
-        1 => { -1 },
-        _ => { 1 }
-    };
+    motor.set_speed_pid_kp(10.0)?;
+    motor.set_speed_pid_ki(2.0)?;
+    motor.set_speed_pid_kd(1.0)?;
 
-    println!("Dir: {}", dir);
-    
-    motor.set_speed_sp(args.speed)?;
-    motor.set_position_sp(args.pos * dir)?;
-    motor.set_stop_action(TachoMotor::STOP_ACTION_HOLD)?;
+    motor.set_hold_pid_kp(10.0)?;
+    motor.set_hold_pid_ki(2.0)?;
+    motor.set_hold_pid_kd(1.0)?;
 
-    motor.set_hold_pid_kp(arg_p)?;
-    motor.set_hold_pid_ki(arg_i)?;
-    motor.set_hold_pid_kd(arg_d)?;
 
-    motor.set_speed_pid_kp(arg_p)?;
-    motor.set_speed_pid_ki(arg_i)?;
-    motor.set_speed_pid_kd(arg_d)?;
+    motor.set_stop_action("hold")?;
+    motor.set_speed_sp(800)?;
+    motor.set_position_sp(90)?;
 
-    motor_default.set_speed_sp(args.speed)?;
-    motor_default.set_position_sp(args.pos * dir)?;
-    motor_default.set_stop_action(TachoMotor::STOP_ACTION_HOLD)?;
+    println!("pos {:?}", motor.get_position()?);
+    println!("{:?}", motor.get_position_sp()?);
 
     motor.run_to_rel_pos(None)?;
     motor_default.run_to_rel_pos(None)?;
@@ -101,3 +90,4 @@ fn main() -> ev3dev_lang_rust::Ev3Result<()> {
     motor.stop()?;
     Ok(())
 }
+
