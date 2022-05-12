@@ -6,6 +6,7 @@ use ev3dev_lang_rust::motors::{TachoMotor, MotorPort, LargeMotor};
 // use std::thread;
 // use std::time::Duration;
 use std::{thread, time::Duration};
+use std::{thread, time::Duration};
 // use ev3dev_lang_rust;
 use std::env;
 use clap::Parser;
