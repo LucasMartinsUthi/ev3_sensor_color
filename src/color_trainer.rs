@@ -61,35 +61,34 @@ struct Args {
 
 //Train color
 fn main() -> Ev3Result<()>{
-    move_motors()?;
-    // let args = Args::parse();
+    let args = Args::parse();
 
-    // let mut color_map = match csv_read() {
-    //     Ok(map) => map,
-    //     Err(_) =>  vec![vec![ColorTrain::None; V_SIZE]; H_SIZE]
-    // };
-    // let color_sensor = ColorSensor::find()?;
-    // let button = Ev3Button::new()?;
+    let mut color_map = match csv_read() {
+        Ok(map) => map,
+        Err(_) =>  vec![vec![ColorTrain::None; V_SIZE]; H_SIZE]
+    };
+    let color_sensor = ColorSensor::find()?;
+    let button = Ev3Button::new()?;
 
-    // color_sensor.set_mode_rgb_raw()?;
+    color_sensor.set_mode_rgb_raw()?;
 
-    // loop {
-    //     let rgb = color_sensor.get_rgb()?;
-    //     write_color(rgb)?;
+    loop {
+        let rgb = color_sensor.get_rgb()?;
+        write_color(rgb)?;
 
-    //     let rgb = (rgb.0 as u8, rgb.1 as u8, rgb.2 as u8);
-    //     let (h, _, v) = rgb_to_hsv(rgb);
+        let rgb = (rgb.0 as u8, rgb.1 as u8, rgb.2 as u8);
+        let (h, _, v) = rgb_to_hsv(rgb);
        
-    //     color_map[h][v] = ColorTrain::from_str(&args.color).unwrap();
-    //     // color_map[h][v] = ColorTrain::Red;
+        color_map[h][v] = ColorTrain::from_str(&args.color).unwrap();
+        // color_map[h][v] = ColorTrain::Red;
 
-    //     button.process();
-    //     if button.is_right() {
-    //         break;
-    //     }
-    // }
+        button.process();
+        if button.is_right() {
+            break;
+        }
+    }
 
-    // csv_write(color_map).unwrap();
+    csv_write(color_map).unwrap();
 
     Ok(())
 }
