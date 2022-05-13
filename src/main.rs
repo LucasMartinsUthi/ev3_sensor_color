@@ -86,15 +86,6 @@ fn main() -> Ev3Result<()> {
 
     motor1.stop()?;
     motor2.stop()?;
-
-    let a: u8 = 10;
-
-    debug(&a)
-
-    println("{}", a)
     
-    Ok(())}
-
-fn debug(a: u8) {
-    println("{}", a)
+    Ok(())
 }
